@@ -305,6 +305,7 @@ void *dealRequest(void *vargp)
 
             char response[PACKAGE_SIZE];
             response[0] = '0';//ack
+            response[1] = '\0';
             send(connfd,response,PACKAGE_SIZE,0);
             int targetFile;
             getFilePath(dstName,fileName,path);
@@ -314,13 +315,14 @@ void *dealRequest(void *vargp)
             char buf[512]; memset(buf,0,512);
             int bytes;
             
+            int cnt = 1;
             recv(connfd,buf,512,0);//magic option,don't touch!
-            while ((bytes = recv(connfd,buf,512,0)) > 0)
+            while ((bytes = read(connfd,buf,512)) > 0)
             {
                 write(target,buf,bytes);
                 memset(buf,0,512);
                 send(connfd,response,PACKAGE_SIZE,0);
-                printf("receive a pack of file :%d\n",bytes);
+                printf("receive a pack of file :%d cnt = %d\n",bytes,cnt); cnt += 1;
                 if (bytes < 512) break; else printf("fucker");
             }
             printf("finished!");

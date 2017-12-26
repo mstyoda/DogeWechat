@@ -318,14 +318,14 @@ class Client {
                 while ((len = fis.read(sendBytes,0,sendPackSize)) > 0)
                 {
                     //System.out.println(new String(sendBytes));
-                    while (tSend > tAck){}
+                    while (tSend != tAck){/*System.out.println(tSend + " " + tAck);*/}
                     try {
                         dos.write(sendBytes,0,len);
                     } 
                     catch (Exception ee) {
                             System.out.println("FUCK Send!");
                     }
-                    System.out.println("A PackSend!");
+                    System.out.println("A PackSend! tSend = " + tSend + " tAck = " + tAck);
                     if (len < sendPackSize) break;
                     tSend += 1;
                 }
