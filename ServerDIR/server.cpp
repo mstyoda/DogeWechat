@@ -60,9 +60,9 @@ struct Afile
     Afile(){}
     Afile(char * _srcName, char* _dstName, char* _fileName)
     {
-        strcat(srcName,_srcName); 
-        strcat(dstName,_dstName); 
-        strcat(fileName,_fileName);
+        strcpy(srcName,_srcName); 
+        strcpy(dstName,_dstName); 
+        strcpy(fileName,_fileName);
     }
 }files[100];
 
@@ -206,6 +206,28 @@ void getResponseForLogin(char *name, char *password, char *response)
             k++;
         }
     }
+}
+
+void getResponseForSyncFileList(char * name, char *response) {
+    int userId = getUserId(name);
+    int cnt = 0;
+
+    response[0] = '1';
+    response[1] = 'y';
+
+    rep(i,1,tfiles) if (cmpStr(files[i].dstName,name)) 
+    {
+        printf("files :%s\n",files[i].fileName);
+        int len = strlen(files[i].srcName);
+        rep(j,0,len - 1) response[j + 3 + cnt * 50] = files[i].srcName[j];
+        response[len + 3 + cnt * 50] = '\0';
+
+        len = strlen(files[i].fileName);
+        rep(j,0,len - 1) response[j + 3 + cnt * 50  + 20] = files[i].fileName[j];
+        response[len + 3 + cnt * 50 + 20] = '\0';
+        cnt ++;
+    }
+    response[2] = '0' + cnt;
 }
 
 void makeFriends(char *aName, char* bName) {
@@ -379,6 +401,42 @@ void *dealRequest(void *vargp)
                 char response[PACKAGE_SIZE];
                 getResponseForNewFriends(users[i].name,response);
                 send(users[i].socketId,response,PACKAGE_SIZE,0);
+            }
+        }
+        else if (commad == '1') { //sync file list
+            char response[PACKAGE_SIZE];
+            getResponseForSyncFileList(users[thisUserId].name, response);
+            send(connfd,response,PACKAGE_SIZE,0);
+        }
+        else if (commad == '2') { //give files
+            std :: fstream fin;
+
+            char path[100];
+            char fname[100];
+            strcpy(path,"downloads/");
+            strcat(path,users[thisUserId].name);
+            strcat(path,"/");
+            getSubString(fname,pack,1,30);
+            strcat(path,fname);
+            printf("path = %s\n",path);
+            fin.open(path,ios_base::in | ios_base::binary);
+            char buffer[512];
+            char shit[512];
+            char response[256];
+            response[0] = '2';
+            response[1] = '\0';
+            send(connfd,response,256,0);
+            recv(connfd,shit,256,0);
+            printf("hehe\n");
+            while (true) {
+                int i = 0;
+                char c;
+                for (i = 0; i < 512 && fin.read(&c,1); i++)
+                    buffer[i] = c;
+                send(connfd,buffer,i,0);
+                printf("len = %d\n",i);
+                recv(connfd,shit,256,0);
+                if (i < 512) break;
             }
         }
     }
