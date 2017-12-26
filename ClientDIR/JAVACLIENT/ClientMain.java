@@ -119,7 +119,12 @@ class Client {
             for (int j = 0; j < 19; j++) if (inPack.charAt(3 + i * 20 + j)!='\0') {
                 friend.name += inPack.charAt(3 + i * 20 + j);
             } else break;
+            
+            for (int j = 0; j < 29; j++) if (inPack.charAt(3 + cnt * 20 + i * 30 + j) != '\0') {
+                friend.msg += "[" + friend.name + "]: " + inPack.charAt(3 + cnt * 20 + i * 30 + j);
+            } else break;
             System.out.println("name = " + friend.name); 
+            System.out.println("msg = " + friend.msg); 
             myFriends.add(friend);
         }
         setFriendsList();
@@ -318,7 +323,7 @@ class Client {
                 while ((len = fis.read(sendBytes,0,sendPackSize)) > 0)
                 {
                     //System.out.println(new String(sendBytes));
-                    while (tSend != tAck){/*System.out.println(tSend + " " + tAck);*/}
+                    while (tSend != tAck){System.out.println(tSend + " " + tAck);}
                     try {
                         dos.write(sendBytes,0,len);
                     } 
@@ -444,7 +449,7 @@ class Client {
     private void buildAddFriendsFrame() {
         addFriendsFrame = new JFrame();
         addFriendsFrame.setBounds(100, 100, 297, 244);
-        addFriendsFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        addFriendsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         addFriendsFrame.getContentPane().setLayout(null);
         
         searchFriend = new JTextField();

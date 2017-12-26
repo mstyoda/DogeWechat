@@ -49,6 +49,8 @@ struct User
     }
 }users[10];
 
+char saveMsg[10][10][200];
+
 struct Afile
 {
     char srcName[25];
@@ -101,7 +103,7 @@ void initUser()
     users[1] = User((char *)("Bob\0"),(char *)("BobBob\0"),1);
     users[2] = User((char *)("yoda\0"),(char *)("yoda\0"),2);
 
-    rep(i,0,2){ rep(j,0,2) isFriend[i][j] = 0; isFriend[i][i] = 1;}
+    rep(i,0,2){rep(j,0,2){isFriend[i][j] = 0; strcpy(saveMsg[i][j],"");}isFriend[i][i] = 1;}
     //printf("%s\n",users[2].name);
 }
 
@@ -160,6 +162,16 @@ int getUserSocket(char *name)
     return -1;
 }
 
+int getUserId(char *name)
+{
+    rep(i,0,N_USER - 1) if (cmpStr(name, users[i].name))
+    {
+        return users[i].userId;
+    }
+    return -1;
+}
+
+
 void getResponseForLogin(char *name, char *password, char *response)
 {
     //command[1] = 'l'
@@ -182,6 +194,17 @@ void getResponseForLogin(char *name, char *password, char *response)
             cnt++;
         }
         response[2] = cnt + '0';
+
+        int k = 0;
+        rep(i,0,N_USER - 1) if (isFriend[userId][i])
+        {
+            int len = strlen(saveMsg[i][userId]);
+            if (len > 30) len = 30;
+            rep(j,0,len - 1) response[j + 3 + cnt * 20 + k * 30] = saveMsg[i][userId][j];
+            response[len + 3 + cnt * 20 + k * 30] = '\0';
+            strcpy(saveMsg[i][userId],"");
+            k++;
+        }
     }
 }
 
@@ -267,7 +290,6 @@ void *dealRequest(void *vargp)
             //printf("Username = %s\n",name);
             //printf("Password = %s\n",password);
             //get username and password
-
             char response[PACKAGE_SIZE];
             getResponseForLogin(name, password, response);
 
@@ -275,7 +297,6 @@ void *dealRequest(void *vargp)
             users[thisUserId].socketId = connfd;
                 
             send(connfd,response,PACKAGE_SIZE,0);
-
         } 
 
         else if (commad == 'q')
@@ -289,9 +310,20 @@ void *dealRequest(void *vargp)
         //send message (command[1],srcName[20],dstName[20]...)
         {
             char dstName[25];
+            char srcName[25];
+            char msg[55];
+            getSubString(srcName,pack,1,20);
             getSubString(dstName,pack,21,40);
+            getSubString(msg,pack,41,90);
             int dstfd = getUserSocket(dstName);
-            send(dstfd,pack,PACKAGE_SIZE,0);
+            int result = send(dstfd,pack,PACKAGE_SIZE,0);
+            if (result == -1) {
+                int srcId = getUserId(srcName);
+                int dstId = getUserId(dstName);
+                strcat(saveMsg[srcId][dstId],msg);
+                strcat(saveMsg[srcId][dstId],"\n");
+                printf("[%s %s]\n",users[srcId].name,users[dstId].name);
+            }
         }
         else if (commad == 'f')
         {
